@@ -9,6 +9,7 @@ import {useProduct} from '../hooks/useProduct';
 import {ProductCarousel} from '../components/ProductCarousel';
 import {LoadingView} from '../components/LoadingView';
 import {ErrorView} from '../components/ErrorView';
+import {FavoriteButton} from '../components/FavoriteButton';
 import {formatCurrency} from '../utils/currency';
 import {colors} from '../theme/colors';
 import {spacing} from '../theme/spacing';
@@ -74,7 +75,7 @@ export function ProductDetailScreen({route}: Props) {
           <Text style={styles.description}>{product.description}</Text>
         </View>
 
-        {/* Espacio para FavoriteButton - Tarea 8 */}
+        <FavoriteButton product={product} />
       </View>
     </ScrollView>
   );
