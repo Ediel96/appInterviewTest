@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useCallback} from 'react';
 import {FlatList, StyleSheet, View} from 'react-native';
 import type {NativeStackScreenProps} from '@react-navigation/native-stack';
 import type {ProductsStackParamList} from '../navigation/navigationTypes';
@@ -13,13 +13,37 @@ import type {Product} from '../models/Product';
 
 type Props = NativeStackScreenProps<ProductsStackParamList, 'ProductsList'>;
 
+const Separator = () => <View style={styles.separator} />;
+
+const EmptyListComponent = () => (
+  <EmptyState
+    title="No products"
+    description="Pull to refresh or try again later."
+  />
+);
+
 export function ProductsScreen({navigation}: Props) {
   const {products, isLoading, isRefreshing, error, refetch, refresh} =
     useProducts();
 
-  const handleProductPress = (productId: number) => {
-    navigation.navigate('ProductDetail', {productId});
-  };
+  const handleProductPress = useCallback(
+    (productId: number) => {
+      navigation.navigate('ProductDetail', {productId});
+    },
+    [navigation],
+  );
+
+  const renderItem = useCallback(
+    ({item}: {item: Product}) => (
+      <ProductCard
+        product={item}
+        onPress={() => handleProductPress(item.id)}
+      />
+    ),
+    [handleProductPress],
+  );
+
+  const keyExtractor = useCallback((item: Product) => item.id.toString(), []);
 
   if (isLoading && !isRefreshing) {
     return <LoadingView message="Loading products..." />;
@@ -42,13 +66,8 @@ export function ProductsScreen({navigation}: Props) {
     <View style={styles.container}>
       <FlatList<Product>
         data={products}
-        keyExtractor={item => item.id.toString()}
-        renderItem={({item}) => (
-          <ProductCard
-            product={item}
-            onPress={() => handleProductPress(item.id)}
-          />
-        )}
+        keyExtractor={keyExtractor}
+        renderItem={renderItem}
         ItemSeparatorComponent={Separator}
         contentContainerStyle={styles.listContent}
         refreshing={isRefreshing}
@@ -56,18 +75,11 @@ export function ProductsScreen({navigation}: Props) {
         initialNumToRender={10}
         maxToRenderPerBatch={10}
         windowSize={10}
-        ListEmptyComponent={
-          <EmptyState
-            title="No products"
-            description="Pull to refresh or try again later."
-          />
-        }
+        ListEmptyComponent={EmptyListComponent}
       />
     </View>
   );
 }
-
-const Separator = () => <View style={styles.separator} />;
 
 const styles = StyleSheet.create({
   container: {

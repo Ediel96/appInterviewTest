@@ -17,7 +17,7 @@ interface ProductCardProps {
   onPress: () => void;
 }
 
-export function ProductCard({product, onPress}: ProductCardProps) {
+function ProductCardComponent({product, onPress}: ProductCardProps) {
   return (
     <Pressable
       style={({pressed}) => [styles.container, pressed && styles.pressed]}
@@ -40,6 +40,8 @@ export function ProductCard({product, onPress}: ProductCardProps) {
     </Pressable>
   );
 }
+
+export const ProductCard = React.memo(ProductCardComponent);
 
 const styles = StyleSheet.create({
   container: {
