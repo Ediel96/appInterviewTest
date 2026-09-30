@@ -12,20 +12,26 @@ interface ErrorViewProps {
 export function ErrorView({message, onRetry}: ErrorViewProps) {
   return (
     <View style={styles.container}>
-      <Text style={styles.errorIcon} accessibilityLabel="Error">
+      <Text style={styles.errorIcon} accessibilityLabel="Error" role="img">
         ⚠️
       </Text>
-      <Text style={styles.message} accessibilityRole="alert">
+      <Text
+        style={styles.message}
+        accessibilityRole="alert"
+        maxFontSizeMultiplier={1.5}>
         {message}
       </Text>
       {onRetry && (
         <TouchableOpacity
           style={styles.retryButton}
           onPress={onRetry}
+          activeOpacity={0.7}
           accessibilityRole="button"
           accessibilityLabel="Retry"
           accessibilityHint="Tap to retry loading">
-          <Text style={styles.retryText}>Retry</Text>
+          <Text style={styles.retryText} maxFontSizeMultiplier={1.3}>
+            Retry
+          </Text>
         </TouchableOpacity>
       )}
     </View>

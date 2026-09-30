@@ -12,14 +12,19 @@ interface EmptyStateProps {
 export function EmptyState({title, description}: EmptyStateProps) {
   return (
     <View style={styles.container}>
-      <Text style={styles.icon} accessibilityLabel="Empty">
+      <Text style={styles.icon} accessibilityLabel="Empty" role="img">
         📭
       </Text>
-      <Text style={styles.title} accessibilityRole="header">
+      <Text
+        style={styles.title}
+        accessibilityRole="header"
+        maxFontSizeMultiplier={1.5}>
         {title}
       </Text>
       {description && (
-        <Text style={styles.description}>{description}</Text>
+        <Text style={styles.description} maxFontSizeMultiplier={1.5}>
+          {description}
+        </Text>
       )}
     </View>
   );

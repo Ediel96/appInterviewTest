@@ -23,19 +23,25 @@ function ProductCardComponent({product, onPress}: ProductCardProps) {
       style={({pressed}) => [styles.container, pressed && styles.pressed]}
       onPress={onPress}
       accessibilityRole="button"
-      accessibilityLabel={`View details for ${product.title}`}
+      accessibilityLabel={`${product.title}, ${formatCurrency(product.price)}`}
       accessibilityHint="Double tap to view product details">
       <Image
         source={{uri: product.thumbnail}}
         style={styles.thumbnail}
         resizeMode="cover"
-        accessibilityLabel={product.title}
+        accessibilityIgnoresInvertColors
+        accessible={false}
       />
       <View style={styles.content}>
-        <Text style={styles.title} numberOfLines={2}>
+        <Text
+          style={styles.title}
+          numberOfLines={2}
+          maxFontSizeMultiplier={1.3}>
           {product.title}
         </Text>
-        <Text style={styles.price}>{formatCurrency(product.price)}</Text>
+        <Text style={styles.price} maxFontSizeMultiplier={1.3}>
+          {formatCurrency(product.price)}
+        </Text>
       </View>
     </Pressable>
   );

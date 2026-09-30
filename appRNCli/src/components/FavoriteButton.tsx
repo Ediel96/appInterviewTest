@@ -23,6 +23,7 @@ export function FavoriteButton({product}: FavoriteButtonProps) {
     <TouchableOpacity
       style={[styles.button, isFavorite && styles.buttonFavorited]}
       onPress={handlePress}
+      activeOpacity={0.7}
       accessibilityRole="button"
       accessibilityLabel={
         isFavorite ? 'Remove from favorites' : 'Add to favorites'
@@ -38,7 +39,9 @@ export function FavoriteButton({product}: FavoriteButtonProps) {
         size={24}
         color={isFavorite ? colors.background : colors.favorite}
       />
-      <Text style={[styles.text, isFavorite && styles.textFavorited]}>
+      <Text
+        style={[styles.text, isFavorite && styles.textFavorited]}
+        maxFontSizeMultiplier={1.5}>
         {isFavorite ? 'Remove from favorites' : 'Add to favorites'}
       </Text>
     </TouchableOpacity>

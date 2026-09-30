@@ -52,27 +52,54 @@ export function ProductDetailScreen({route}: Props) {
       <ProductCarousel images={product.images} />
 
       <View style={styles.content}>
-        <Text style={styles.title}>{product.title}</Text>
+        <Text
+          style={styles.title}
+          accessibilityRole="header"
+          maxFontSizeMultiplier={1.5}>
+          {product.title}
+        </Text>
 
         <View style={styles.metaRow}>
-          <Text style={styles.price}>{formatCurrency(product.price)}</Text>
-          <View style={styles.ratingContainer}>
-            <Text style={styles.ratingIcon}>⭐</Text>
-            <Text style={styles.rating}>{product.rating.toFixed(1)}</Text>
+          <Text
+            style={styles.price}
+            accessibilityLabel={`Price: ${formatCurrency(product.price)}`}
+            maxFontSizeMultiplier={1.3}>
+            {formatCurrency(product.price)}
+          </Text>
+          <View
+            style={styles.ratingContainer}
+            accessibilityLabel={`Rating: ${product.rating.toFixed(1)} out of 5`}>
+            <Text style={styles.ratingIcon} accessible={false}>
+              ⭐
+            </Text>
+            <Text style={styles.rating} maxFontSizeMultiplier={1.3}>
+              {product.rating.toFixed(1)}
+            </Text>
           </View>
         </View>
 
         {product.category && (
-          <Text style={styles.category}>Category: {product.category}</Text>
+          <Text style={styles.category} maxFontSizeMultiplier={1.3}>
+            Category: {product.category}
+          </Text>
         )}
 
         {product.brand && (
-          <Text style={styles.brand}>Brand: {product.brand}</Text>
+          <Text style={styles.brand} maxFontSizeMultiplier={1.3}>
+            Brand: {product.brand}
+          </Text>
         )}
 
         <View style={styles.descriptionContainer}>
-          <Text style={styles.descriptionTitle}>Description</Text>
-          <Text style={styles.description}>{product.description}</Text>
+          <Text
+            style={styles.descriptionTitle}
+            accessibilityRole="header"
+            maxFontSizeMultiplier={1.5}>
+            Description
+          </Text>
+          <Text style={styles.description} maxFontSizeMultiplier={1.5}>
+            {product.description}
+          </Text>
         </View>
 
         <FavoriteButton product={product} />
