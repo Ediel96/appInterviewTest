@@ -1,0 +1,33 @@
+server:
+  port: 8080
+
+clients:
+  dummy-json:
+    base-url: https://dummyjson.com
+    connect-timeout: 3s
+    read-timeout: 5s
+
+springdoc:
+  api-docs:
+    enabled: true
+    path: /v3/api-docs
+  swagger-ui:
+    enabled: true
+    path: /swagger-ui.html
+    operations-sorter: method
+    tags-sorter: alpha
+    display-request-duration: true
+    try-it-out-enabled: true
+
+openapi:
+  title: MiniStore API
+  description: API intermediaria entre la aplicación React Native y DummyJSON
+  version: 1.0.0
+  server-url: http://localhost:8080
+  server-description: Entorno local
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
