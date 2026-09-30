@@ -4,6 +4,7 @@ import com.backend.hamilton.domain.model.Product;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Primary;
+import org.springframework.context.annotation.Profile;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -11,9 +12,10 @@ import java.util.List;
 /**
  * Test configuration providing a stub implementation of ProductCatalogPort.
  * This allows the application context to load during tests without requiring
- * the infrastructure layer implementation.
+ * external API calls.
  */
 @TestConfiguration
+@Profile("test")
 public class TestProductCatalogConfig {
 
     @Bean
