@@ -1,9 +1,15 @@
 import React from 'react';
+import {fireEvent, render} from '@testing-library/react-native';
 import {FavoriteButton} from '../FavoriteButton';
+import {useFavoritesStore} from '../../store/favoritesStore';
 import type {Product} from '../../models/Product';
-import renderer from 'react-test-renderer';
 
-jest.mock('../../store/favoritesStore');
+jest.mock('../../store/favoritesStore', () => ({
+  useFavoritesStore: jest.fn(),
+}));
+
+const mockUseFavoritesStore = useFavoritesStore as unknown as jest.Mock;
+const toggleFavorite = jest.fn();
 
 const mockProduct: Product = {
   id: 1,
@@ -17,16 +23,43 @@ const mockProduct: Product = {
   brand: 'Test Brand',
 };
 
+function mockStore(isFavorite: boolean) {
+  mockUseFavoritesStore.mockImplementation((selector: (state: any) => any) =>
+    selector({
+      isFavorite: () => isFavorite,
+      toggleFavorite,
+    }),
+  );
+}
+
 describe('FavoriteButton', () => {
-  it('renders without crashing', () => {
-    const tree = renderer.create(<FavoriteButton product={mockProduct} />);
-    expect(tree).toBeTruthy();
+  beforeEach(() => {
+    jest.clearAllMocks();
   });
 
-  it('renders with correct structure', () => {
-    const tree = renderer.create(<FavoriteButton product={mockProduct} />);
-    const treeJson = tree.toJSON();
-    expect(treeJson).toBeTruthy();
-    expect(treeJson).toHaveProperty('type');
+  it('adds a product that is not a favorite', async () => {
+    mockStore(false);
+    const {getByRole, getByText} = await render(
+      <FavoriteButton product={mockProduct} />,
+    );
+    const button = getByRole('button', {name: 'Add to favorites'});
+
+    expect(getByText('Add to favorites')).toBeTruthy();
+    expect(button.props.accessibilityState).toEqual({selected: false});
+
+    await fireEvent.press(button);
+
+    expect(toggleFavorite).toHaveBeenCalledWith(mockProduct);
+  });
+
+  it('shows the selected state for an existing favorite', async () => {
+    mockStore(true);
+    const {getByRole, getByText} = await render(
+      <FavoriteButton product={mockProduct} />,
+    );
+    const button = getByRole('button', {name: 'Remove from favorites'});
+
+    expect(getByText('Remove from favorites')).toBeTruthy();
+    expect(button.props.accessibilityState).toEqual({selected: true});
   });
 });

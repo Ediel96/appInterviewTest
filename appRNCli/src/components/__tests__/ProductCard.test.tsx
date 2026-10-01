@@ -1,7 +1,7 @@
 import React from 'react';
+import {fireEvent, render} from '@testing-library/react-native';
 import {ProductCard} from '../ProductCard';
 import type {Product} from '../../models/Product';
-import renderer from 'react-test-renderer';
 
 const mockProduct: Product = {
   id: 1,
@@ -16,22 +16,28 @@ const mockProduct: Product = {
 };
 
 describe('ProductCard', () => {
-  it('renders without crashing', () => {
-    const mockOnPress = jest.fn();
-    const tree = renderer.create(
-      <ProductCard product={mockProduct} onPress={mockOnPress} />,
+  it('shows the minimum product information', async () => {
+    const {getByText, getByRole} = await render(
+      <ProductCard product={mockProduct} onPress={jest.fn()} />,
     );
-    expect(tree).toBeTruthy();
-    expect(tree.toJSON()).toBeTruthy();
+
+    expect(getByText('Test Product')).toBeTruthy();
+    expect(getByText('$29.99')).toBeTruthy();
+    expect(
+      getByRole('button', {name: 'Test Product, $29.99'}),
+    ).toBeTruthy();
   });
 
-  it('matches snapshot structure', () => {
-    const mockOnPress = jest.fn();
-    const tree = renderer.create(
-      <ProductCard product={mockProduct} onPress={mockOnPress} />,
+  it('notifies when the product is pressed', async () => {
+    const onPress = jest.fn();
+    const {getByRole} = await render(
+      <ProductCard product={mockProduct} onPress={onPress} />,
     );
-    const treeJson = tree.toJSON();
-    expect(treeJson).toBeTruthy();
-    expect(treeJson).toHaveProperty('type');
+
+    await fireEvent.press(
+      getByRole('button', {name: 'Test Product, $29.99'}),
+    );
+
+    expect(onPress).toHaveBeenCalledTimes(1);
   });
 });
