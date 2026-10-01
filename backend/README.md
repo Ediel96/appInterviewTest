@@ -82,7 +82,7 @@ backend/
 │   └── HamiltonApplication.java         # Punto de entrada
 │
 ├── src/main/resources/
-│   └── application.properties           # Configuración de la aplicación
+│   └── application.yml                   # Configuración centralizada
 │
 └── src/test/java/                       # Tests unitarios e integración
     └── com/backend/hamilton/
@@ -105,25 +105,83 @@ backend/
 
 ### Variables de entorno / Properties
 
-Archivo: `src/main/resources/application.properties`
+Archivo: `src/main/resources/application.yml`
 
-```properties
-# DummyJSON API
-dummyjson.api.base-url=https://dummyjson.com
-dummyjson.api.timeout=10000
+Toda la configuración de la API (endpoints, validaciones, errores y cliente externo)
+vive en `application.yml` y se lee con clases `@ConfigurationProperties`. No hay
+URLs, límites ni mensajes de error escritos en el código.
 
-# OpenAPI Documentation
-openapi.title=MiniStore API
-openapi.description=Product catalog API powered by DummyJSON
-openapi.version=1.0.0
-openapi.server-url=http://localhost:8080
-openapi.server-description=Development server
+```yaml
+api:
+  docs:
+    title: MiniStore API
+    description: API intermediaria entre la aplicación React Native y DummyJSON
+    version: 1.0.0
+    server-url: http://localhost:8080
+    server-description: Entorno local
+    endpoints:
+      products-base-path: /api/products
+      product-id-path: /{id}
+
+  validation:
+    product-id:
+      minimum: 1
+    page:
+      minimum: 0
+      default-value: 0
+    size:
+      minimum: 0      # 0 = sin límite
+      maximum: 100
+      default-value: 0
+    search:
+      min-length: 2
+      max-length: 100
+    category:
+      min-length: 1
+      max-length: 50
+
+  errors:
+    definitions:
+      invalid-product-id:
+        code: INVALID_PRODUCT_ID
+        message: "Invalid Product ID: the value must be a positive integer"
+        http-status: 400
+        title: ID de producto inválido
+      # ... una entrada por cada ErrorCode
+
+clients:
+  dummy-json:
+    base-url: https://dummyjson.com
+    paths:
+      products: /products
+      product-by-id: /products/{id}
+    query:
+      all-products-limit: 0
+    timeouts:
+      connect: 3s
+      read: 5s
 ```
+
+Las clases que enlazan estos bloques son:
+
+| Bloque | Clase (`configuration/properties`) |
+|--------|-------------------------------------|
+| `api.docs` | `ApiDocsProperties` |
+| `api.validation` | `ValidationRulesProperties` |
+| `api.errors` | `ErrorHandlingProperties` |
+| `clients.dummy-json` | `DummyJsonClientProperties` |
 
 Para cambiar la URL de DummyJSON (por ejemplo, para testing local):
-```properties
-dummyjson.api.base-url=http://localhost:3000
+```yaml
+clients:
+  dummy-json:
+    base-url: http://localhost:3000
 ```
+
+> Los límites de `api.validation` alimentan a la vez los validadores y el esquema
+> OpenAPI (`OpenApiCustomizerConfig`), por lo que la documentación y la validación
+> real nunca se desincronizan.
+
 
 ## Comandos principales
 
@@ -171,6 +229,15 @@ Genera el archivo `build/docs/openapi.json` con la especificación completa de l
 GET /api/products
 ```
 
+**Parámetros de consulta** (todos opcionales):
+
+| Nombre | Tipo | Restricción (desde `api.validation`) |
+|--------|------|----------------------------------------|
+| `page` | integer | `>= 0`; por defecto `0` |
+| `size` | integer | `0..100`; `0` devuelve el catálogo completo (ignora `page`) |
+| `search` | string | longitud `2..100` |
+| `category` | string | longitud `1..50` |
+
 **Respuesta exitosa (200)**:
 ```json
 {
@@ -194,6 +261,7 @@ GET /api/products
 ```
 
 **Errores posibles**:
+- `400 Bad Request`: algún parámetro viola las restricciones de `api.validation`
 - `502 Bad Gateway`: Error al comunicarse con DummyJSON
 - `504 Gateway Timeout`: Timeout al llamar a DummyJSON
 
@@ -284,25 +352,33 @@ build/docs/openapi.json
 
 ## Formato de errores
 
-Todos los errores devuelven una respuesta consistente:
+Todos los errores devuelven una respuesta consistente. El `status`, el `code` y el
+`message` se resuelven desde `api.errors.definitions`, de modo que el contrato y el
+comportamiento salen de la misma configuración:
 
 ```json
 {
   "status": 404,
+  "code": "PRODUCT_NOT_FOUND",
   "message": "Product with ID 999 not found",
+  "path": "/api/products/999",
   "timestamp": "2024-09-30T10:30:00Z"
 }
 ```
 
-### Códigos de estado
+### Códigos de estado y códigos de error
 
-| Código | Significado | Ejemplo |
-|--------|-------------|---------|
-| 200 | OK | Producto encontrado |
-| 400 | Bad Request | ID inválido o malformado |
-| 404 | Not Found | Producto no existe |
-| 502 | Bad Gateway | Error en DummyJSON |
-| 504 | Gateway Timeout | Timeout con DummyJSON |
+| HTTP | `code` | Cuándo |
+|------|--------|--------|
+| 200 | — | Petición correcta |
+| 400 | `INVALID_PRODUCT_ID` | El id no cumple el mínimo configurado (vía núcleo) |
+| 400 | `VALIDATION_FAILED` | `page`, `size`, `search` o `category` incumplen `api.validation` |
+| 400 | `TYPE_MISMATCH` | Un parámetro tiene un formato incorrecto (p. ej. `abc` como id) |
+| 404 | `PRODUCT_NOT_FOUND` | El producto no existe en DummyJSON |
+| 404 | `ENDPOINT_NOT_FOUND` | La ruta solicitada no existe |
+| 502 | `EXTERNAL_SERVICE_ERROR` | Error al comunicarse con DummyJSON |
+| 504 | `EXTERNAL_SERVICE_TIMEOUT` | Timeout con DummyJSON |
+| 500 | `UNEXPECTED_ERROR` | Error inesperado no controlado |
 
 ## Testing
 
@@ -313,7 +389,10 @@ El proyecto incluye pruebas completas:
 - **Pruebas unitarias de servicio**: Lógica de negocio con mocks
 - **Pruebas del adaptador DummyJSON**: Con `MockRestServiceServer` (sin red)
 - **Pruebas del controlador web**: Con `@WebMvcTest`
-- **Pruebas del contrato OpenAPI**: Validación de documentación
+- **Pruebas de binding de configuración**: `ValidationRulesPropertiesBindingTest`
+- **Pruebas de validadores configurables**: `ConstraintValidatorsTest`
+- **Pruebas del catálogo de errores**: `ErrorHandlingPropertiesTest`
+- **Pruebas del contrato OpenAPI**: Incluye que los límites publicados coincidan con `api.validation`
 
 Todas las pruebas son **rápidas, deterministas y sin dependencias externas**.
 
@@ -374,9 +453,10 @@ curl https://dummyjson.com/products/1
 
 ### Error: "Port 8080 already in use"
 
-Cambiar puerto en `application.properties`:
-```properties
-server.port=8081
+Cambiar puerto en `application.yml`:
+```yaml
+server:
+  port: 8081
 ```
 
 ### Tests fallan

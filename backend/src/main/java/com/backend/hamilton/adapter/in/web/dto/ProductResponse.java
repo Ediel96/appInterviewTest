@@ -8,33 +8,34 @@ import java.util.List;
 /**
  * Response DTO representing a single product for the API.
  */
-@Schema(description = "Product information")
+@Schema(description = "Información del producto")
 public record ProductResponse(
-        @Schema(description = "Unique product identifier", example = "1")
+        @Schema(description = "Identificador único del producto", example = "1")
         Long id,
 
-        @Schema(description = "Product name", example = "Essence Mascara Lash Princess")
+        @Schema(description = "Nombre del producto", example = "Essence Mascara Lash Princess")
         String title,
 
-        @Schema(description = "Product description", example = "A popular mascara known for its volumizing effects")
+        @Schema(description = "Descripción del producto")
         String description,
 
-        @Schema(description = "Product price in USD", example = "9.99")
+        @Schema(description = "Precio del producto en USD", example = "9.99")
         BigDecimal price,
 
-        @Schema(description = "Product rating from 0 to 5", example = "4.5")
+        @Schema(description = "Calificación del producto de 0 a 5", example = "4.5")
         BigDecimal rating,
 
-        @Schema(description = "URL of the product thumbnail image", example = "https://cdn.dummyjson.com/product-images/1/thumbnail.jpg")
+        @Schema(description = "URL de la imagen miniatura",
+                example = "https://cdn.dummyjson.com/product-images/1/thumbnail.jpg")
         String thumbnail,
 
-        @Schema(description = "List of product image URLs")
+        @Schema(description = "URLs de las imágenes del producto")
         List<String> images,
 
-        @Schema(description = "Product category", example = "beauty")
+        @Schema(description = "Categoría del producto", example = "beauty")
         String category,
 
-        @Schema(description = "Product brand name", example = "Essence", nullable = true)
+        @Schema(description = "Marca del producto; puede ser null", nullable = true, example = "Essence")
         String brand
 ) {
 }

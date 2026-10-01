@@ -1,6 +1,7 @@
 package com.backend.hamilton.application.port.out;
 
 import com.backend.hamilton.domain.model.Product;
+import com.backend.hamilton.domain.model.ProductQuery;
 
 import java.util.List;
 
@@ -16,6 +17,14 @@ public interface ProductCatalogPort {
      * @return list of all products
      */
     List<Product> findAll();
+
+    /**
+     * Returns the products matching the given query.
+     *
+     * @param query paging and filtering criteria
+     * @return the matching products
+     */
+    List<Product> findAll(ProductQuery query);
 
     /**
      * Retrieves a product by its ID from the catalog.

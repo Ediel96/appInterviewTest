@@ -7,12 +7,12 @@ import java.util.List;
 /**
  * Response DTO representing a list of products with metadata.
  */
-@Schema(description = "Product list with total count")
+@Schema(description = "Lista de productos con el total de resultados")
 public record ProductListResponse(
-        @Schema(description = "List of products")
+        @Schema(description = "Productos recuperados del catálogo")
         List<ProductResponse> products,
 
-        @Schema(description = "Total number of products", example = "194")
+        @Schema(description = "Cantidad de productos incluida en products", example = "194")
         Integer total
 ) {
 }

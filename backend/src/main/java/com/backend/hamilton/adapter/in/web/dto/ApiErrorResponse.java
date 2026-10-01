@@ -4,16 +4,27 @@ import io.swagger.v3.oas.annotations.media.Schema;
 
 /**
  * Standard error response for API errors.
+ *
+ * <p>The {@code status}, {@code code} and {@code message} values are all resolved from
+ * {@code api.errors.definitions}, so this schema always mirrors the configured catalog.
  */
-@Schema(description = "Error response information")
+@Schema(description = "Información de respuesta de error")
 public record ApiErrorResponse(
-        @Schema(description = "HTTP status code", example = "404")
+        @Schema(description = "Código HTTP del error", example = "404")
         int status,
 
-        @Schema(description = "Error message", example = "Product not found")
+        @Schema(description = "Código estable del error, definido en api.errors.definitions",
+                example = "PRODUCT_NOT_FOUND")
+        String code,
+
+        @Schema(description = "Descripción del error", example = "Product with ID 999 not found")
         String message,
 
-        @Schema(description = "Timestamp of the error", example = "2024-01-15T10:30:00Z")
+        @Schema(description = "Ruta de la petición que provocó el error", example = "/api/products/999")
+        String path,
+
+        @Schema(description = "Fecha y hora del error en formato ISO-8601",
+                example = "2024-01-15T10:30:00Z")
         String timestamp
 ) {
 }

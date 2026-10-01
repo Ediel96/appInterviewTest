@@ -1,9 +1,11 @@
 package com.backend.hamilton.application.service;
 
 import com.backend.hamilton.application.port.out.ProductCatalogPort;
+import com.backend.hamilton.domain.exception.ErrorCode;
 import com.backend.hamilton.domain.exception.InvalidProductIdException;
 import com.backend.hamilton.domain.exception.ProductNotFoundException;
 import com.backend.hamilton.domain.model.Product;
+import com.backend.hamilton.domain.model.ProductQuery;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -67,7 +69,7 @@ class ProductServiceTest {
                 () -> productService.getProductById(null)
         );
 
-        assertEquals("Product ID cannot be null", exception.getMessage());
+        assertEquals(ErrorCode.INVALID_PRODUCT_ID, exception.errorCode());
         verify(productCatalogPort, never()).findById(any());
     }
 
@@ -78,7 +80,7 @@ class ProductServiceTest {
                 () -> productService.getProductById(0L)
         );
 
-        assertEquals("Product ID must be greater than zero", exception.getMessage());
+        assertEquals(ErrorCode.INVALID_PRODUCT_ID, exception.errorCode());
         verify(productCatalogPort, never()).findById(any());
     }
 
@@ -89,8 +91,20 @@ class ProductServiceTest {
                 () -> productService.getProductById(-1L)
         );
 
-        assertEquals("Product ID must be greater than zero", exception.getMessage());
+        assertEquals(ErrorCode.INVALID_PRODUCT_ID, exception.errorCode());
         verify(productCatalogPort, never()).findById(any());
+    }
+
+    @Test
+    void shouldDelegateQueriesToTheCatalog() {
+        ProductQuery query = new ProductQuery(2, 10, "mascara", "beauty");
+        List<Product> expected = List.of(createProduct(3L, "Product 3"));
+        when(productCatalogPort.findAll(query)).thenReturn(expected);
+
+        List<Product> result = productService.list(query);
+
+        assertEquals(expected, result);
+        verify(productCatalogPort, times(1)).findAll(query);
     }
 
     @Test

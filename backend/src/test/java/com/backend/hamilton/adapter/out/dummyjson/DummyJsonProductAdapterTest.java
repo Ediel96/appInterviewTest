@@ -1,9 +1,12 @@
 package com.backend.hamilton.adapter.out.dummyjson;
 
+import com.backend.hamilton.configuration.properties.DummyJsonClientProperties;
+import com.backend.hamilton.domain.exception.ErrorCode;
 import com.backend.hamilton.domain.exception.ExternalServiceException;
 import com.backend.hamilton.domain.exception.ExternalServiceTimeoutException;
 import com.backend.hamilton.domain.exception.ProductNotFoundException;
 import com.backend.hamilton.domain.model.Product;
+import com.backend.hamilton.domain.model.ProductQuery;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpMethod;
@@ -11,11 +14,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.client.MockRestServiceServer;
 import org.springframework.web.client.RestClient;
-import org.springframework.web.client.support.RestClientAdapter;
-import org.springframework.web.service.invoker.HttpServiceProxyFactory;
 
 import java.math.BigDecimal;
 import java.net.SocketTimeoutException;
+import java.time.Duration;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -34,10 +36,16 @@ class DummyJsonProductAdapterTest {
 
     @BeforeEach
     void setUp() {
+        DummyJsonClientProperties properties = new DummyJsonClientProperties(
+                BASE_URL,
+                new DummyJsonClientProperties.Paths("/products", "/products/{id}"),
+                new DummyJsonClientProperties.Query(0),
+                new DummyJsonClientProperties.Timeouts(Duration.ofSeconds(3), Duration.ofSeconds(5)));
+
         RestClient.Builder builder = RestClient.builder().baseUrl(BASE_URL);
         mockServer = MockRestServiceServer.bindTo(builder).build();
         RestClient restClient = builder.build();
-        adapter = new DummyJsonProductAdapter(restClient);
+        adapter = new DummyJsonProductAdapter(restClient, properties);
     }
 
     @Test
@@ -212,6 +220,7 @@ class DummyJsonProductAdapterTest {
         );
 
         assertTrue(exception.getMessage().contains("999"));
+        assertEquals(ErrorCode.PRODUCT_NOT_FOUND, exception.errorCode());
         mockServer.verify();
     }
 
@@ -226,7 +235,7 @@ class DummyJsonProductAdapterTest {
                 () -> adapter.findAll()
         );
 
-        assertTrue(exception.getMessage().contains("Server error"));
+        assertEquals(ErrorCode.EXTERNAL_SERVICE_ERROR, exception.errorCode());
         mockServer.verify();
     }
 
@@ -241,8 +250,7 @@ class DummyJsonProductAdapterTest {
                 () -> adapter.findById(1L)
         );
 
-        assertTrue(exception.getMessage().contains("Empty response") ||
-                   exception.getMessage().contains("Deserialization"));
+        assertEquals(ErrorCode.EXTERNAL_SERVICE_ERROR, exception.errorCode());
         mockServer.verify();
     }
 
@@ -259,7 +267,7 @@ class DummyJsonProductAdapterTest {
                 () -> adapter.findById(1L)
         );
 
-        assertTrue(exception.getMessage().contains("Timeout"));
+        assertEquals(ErrorCode.EXTERNAL_SERVICE_TIMEOUT, exception.errorCode());
         mockServer.verify();
     }
 
@@ -369,7 +377,51 @@ class DummyJsonProductAdapterTest {
                 () -> adapter.findById(1L)
         );
 
-        assertTrue(exception.getMessage().contains("Client error"));
+        assertEquals(ErrorCode.EXTERNAL_SERVICE_ERROR, exception.errorCode());
+        mockServer.verify();
+    }
+
+    @Test
+    void shouldTranslateQueryPagingIntoSkipAndLimit() {
+        String responseBody = """
+                {
+                    "products": [],
+                    "total": 0,
+                    "skip": 20,
+                    "limit": 10
+                }
+                """;
+
+        mockServer.expect(requestTo(BASE_URL + "/products?skip=20&limit=10"))
+                .andExpect(method(HttpMethod.GET))
+                .andExpect(queryParam("skip", "20"))
+                .andExpect(queryParam("limit", "10"))
+                .andRespond(withSuccess(responseBody, MediaType.APPLICATION_JSON));
+
+        adapter.findAll(new ProductQuery(2, 10, null, null));
+
+        mockServer.verify();
+    }
+
+    @Test
+    void shouldForwardQueryFiltersToTheUpstreamService() {
+        String responseBody = """
+                {
+                    "products": [],
+                    "total": 0,
+                    "skip": 0,
+                    "limit": 0
+                }
+                """;
+
+        mockServer.expect(requestTo(BASE_URL + "/products?limit=0&q=mascara&category=beauty"))
+                .andExpect(method(HttpMethod.GET))
+                .andExpect(queryParam("q", "mascara"))
+                .andExpect(queryParam("category", "beauty"))
+                .andRespond(withSuccess(responseBody, MediaType.APPLICATION_JSON));
+
+        adapter.findAll(new ProductQuery(0, 0, "mascara", "beauty"));
+
         mockServer.verify();
     }
 }

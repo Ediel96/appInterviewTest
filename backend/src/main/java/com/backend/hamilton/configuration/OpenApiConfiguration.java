@@ -1,47 +1,33 @@
 package com.backend.hamilton.configuration;
 
+import com.backend.hamilton.configuration.properties.ApiDocsProperties;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Info;
 import io.swagger.v3.oas.models.servers.Server;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 /**
- * OpenAPI documentation configuration.
+ * Builds the OpenAPI document metadata from the externalised configuration.
  */
 @Configuration
 public class OpenApiConfiguration {
 
-    @Value("${openapi.title}")
-    private String title;
-
-    @Value("${openapi.description}")
-    private String description;
-
-    @Value("${openapi.version}")
-    private String version;
-
-    @Value("${openapi.server-url}")
-    private String serverUrl;
-
-    @Value("${openapi.server-description}")
-    private String serverDescription;
-
     /**
-     * Configures the OpenAPI documentation bean.
+     * Creates the OpenAPI descriptor.
      *
-     * @return configured OpenAPI instance
+     * @param properties API documentation properties bound from {@code api.docs}
+     * @return the configured OpenAPI model
      */
     @Bean
-    public OpenAPI customOpenAPI() {
+    public OpenAPI customOpenAPI(ApiDocsProperties properties) {
         return new OpenAPI()
                 .info(new Info()
-                        .title(title)
-                        .description(description)
-                        .version(version))
+                        .title(properties.title())
+                        .description(properties.description())
+                        .version(properties.version()))
                 .addServersItem(new Server()
-                        .url(serverUrl)
-                        .description(serverDescription));
+                        .url(properties.serverUrl())
+                        .description(properties.serverDescription()));
     }
 }

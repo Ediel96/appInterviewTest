@@ -1,11 +1,11 @@
 server:
   port: 8080
 
-clients:
-  dummy-json:
-    base-url: https://dummyjson.com
-    connect-timeout: 3s
-    read-timeout: 5s
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
 
 springdoc:
   api-docs:
@@ -14,20 +14,92 @@ springdoc:
   swagger-ui:
     enabled: true
     path: /swagger-ui.html
-    operations-sorter: method
-    tags-sorter: alpha
-    display-request-duration: true
-    try-it-out-enabled: true
 
-openapi:
-  title: MiniStore API
-  description: API intermediaria entre la aplicación React Native y DummyJSON
-  version: 1.0.0
-  server-url: http://localhost:8080
-  server-description: Entorno local
+# ---------------------------------------------------------------------------
+# Configuracion de la API: endpoints, validaciones, errores y documentacion.
+# Todo lo que el codigo necesita saber esta aqui; ninguna clase contiene
+# URLs, mensajes ni limites escritos a mano.
+# ---------------------------------------------------------------------------
+api:
+  docs:
+    title: MiniStore API
+    description: API intermediaria entre la aplicación React Native y DummyJSON
+    version: 1.0.0
+    server-url: http://localhost:8080
+    server-description: Entorno local
+    endpoints:
+      products-base-path: /api/products
+      product-id-path: /{id}
 
-management:
-  endpoints:
-    web:
-      exposure:
-        include: health
+  validation:
+    product-id:
+      minimum: 1
+    page:
+      minimum: 0
+      default-value: 0
+    size:
+      # 0 significa "sin limite": devuelve el catalogo completo.
+      minimum: 0
+      maximum: 100
+      default-value: 0
+    search:
+      min-length: 2
+      max-length: 100
+    category:
+      min-length: 1
+      max-length: 50
+
+  errors:
+    definitions:
+      invalid-product-id:
+        code: INVALID_PRODUCT_ID
+        message: "Invalid Product ID: the value must be a positive integer"
+        http-status: 400
+        title: ID de producto inválido
+      product-not-found:
+        code: PRODUCT_NOT_FOUND
+        message: "Product with ID {id} not found"
+        http-status: 404
+        title: Producto no encontrado
+      external-service-error:
+        code: EXTERNAL_SERVICE_ERROR
+        message: "External service error: the catalog provider could not be reached or responded with an error"
+        http-status: 502
+        title: Error del servicio externo
+      external-service-timeout:
+        code: EXTERNAL_SERVICE_TIMEOUT
+        message: "Timeout accessing the external service"
+        http-status: 504
+        title: Tiempo de espera agotado
+      validation-failed:
+        code: VALIDATION_FAILED
+        message: "Validation failed for '{field}': the constraints configured in api.validation are not met"
+        http-status: 400
+        title: Petición inválida
+      type-mismatch:
+        code: TYPE_MISMATCH
+        message: "Parameter '{field}' must be of type {expectedType}"
+        http-status: 400
+        title: Tipo de parámetro inválido
+      endpoint-not-found:
+        code: ENDPOINT_NOT_FOUND
+        message: "No endpoint found for {method} {path}"
+        http-status: 404
+        title: Recurso no encontrado
+      unexpected-error:
+        code: UNEXPECTED_ERROR
+        message: "Unexpected error while processing the request"
+        http-status: 500
+        title: Error interno del servidor
+
+clients:
+  dummy-json:
+    base-url: https://dummyjson.com
+    paths:
+      products: /products
+      product-by-id: /products/{id}
+    query:
+      all-products-limit: 0
+    timeouts:
+      connect: 3s
+      read: 5s

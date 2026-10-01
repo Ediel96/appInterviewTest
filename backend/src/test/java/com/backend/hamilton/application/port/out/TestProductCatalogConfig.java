@@ -1,6 +1,7 @@
 package com.backend.hamilton.application.port.out;
 
 import com.backend.hamilton.domain.model.Product;
+import com.backend.hamilton.domain.model.ProductQuery;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Primary;
@@ -37,6 +38,11 @@ public class TestProductCatalogConfig {
                                 "Test Brand"
                         )
                 );
+            }
+
+            @Override
+            public List<Product> findAll(ProductQuery query) {
+                return findAll();
             }
 
             @Override
