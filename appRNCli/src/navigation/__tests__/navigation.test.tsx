@@ -21,7 +21,16 @@ jest.mock('@react-navigation/bottom-tabs', () => {
     ReactModule.createElement(
       View,
       {testID: `tab-${name}`},
-      options?.tabBarIcon?.({color: '#000000', size: 24}),
+      options?.tabBarIcon?.({
+        color: '#000000',
+        size: 24,
+        focused: false,
+      }),
+      options?.tabBarIcon?.({
+        color: '#000000',
+        size: 24,
+        focused: true,
+      }),
       Component ? ReactModule.createElement(Component) : null,
     );
 
@@ -56,7 +65,9 @@ jest.mock('../../screens/ProductDetailScreen', () => ({
 
 describe('navigation structure', () => {
   it('registers the product and favorite tabs with their stacks', async () => {
-    const {getAllByTestId, getByTestId} = await render(<RootNavigator />);
+    const {container, getAllByTestId, getByTestId} = await render(
+      <RootNavigator />,
+    );
 
     expect(getByTestId('bottom-tabs')).toBeTruthy();
     expect(getByTestId('tab-ProductsTab')).toBeTruthy();
@@ -65,5 +76,15 @@ describe('navigation structure', () => {
     expect(getByTestId('stack-ProductsList')).toBeTruthy();
     expect(getByTestId('stack-FavoritesList')).toBeTruthy();
     expect(getAllByTestId('stack-ProductDetail')).toHaveLength(2);
+    expect(
+      container
+        .queryAll(instance => instance.type === 'Icon')
+        .map(instance => instance.props.name),
+    ).toEqual([
+      'storefront-outline',
+      'storefront',
+      'heart-outline',
+      'heart',
+    ]);
   });
 });

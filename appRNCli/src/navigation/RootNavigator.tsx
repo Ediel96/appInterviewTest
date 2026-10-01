@@ -9,12 +9,26 @@ import {colors} from '../theme/colors';
 
 const Tab = createBottomTabNavigator<BottomTabParamList>();
 
-const ProductsTabIcon = ({color, size}: {color: string; size: number}) => (
-  <Icon name="storefront-outline" size={size} color={color} />
+interface TabIconProps {
+  focused: boolean;
+  color: string;
+  size: number;
+}
+
+const ProductsTabIcon = ({focused, color, size}: TabIconProps) => (
+  <Icon
+    name={focused ? 'storefront' : 'storefront-outline'}
+    size={size}
+    color={color}
+  />
 );
 
-const FavoritesTabIcon = ({color, size}: {color: string; size: number}) => (
-  <Icon name="heart-outline" size={size} color={color} />
+const FavoritesTabIcon = ({focused, color, size}: TabIconProps) => (
+  <Icon
+    name={focused ? 'heart' : 'heart-outline'}
+    size={size}
+    color={color}
+  />
 );
 
 export function RootNavigator() {
