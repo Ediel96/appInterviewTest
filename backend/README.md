@@ -135,6 +135,25 @@ dummyjson.api.base-url=http://localhost:3000
 
 La aplicación arranca en `http://localhost:8080`
 
+### Ejecutar con Docker
+
+Desde el directorio `backend/`, construir la imagen e iniciar el servicio:
+
+```bash
+docker compose up --build
+```
+
+La API estará disponible en `http://localhost:8080`; Swagger UI, en
+`http://localhost:8080/swagger-ui.html`. Para detener el servicio, usa
+`Ctrl+C`; si lo iniciaste en segundo plano con `docker compose up --build -d`,
+ejecuta `docker compose down`.
+
+La URL de DummyJSON se puede cambiar al iniciar el contenedor:
+
+```bash
+DUMMYJSON_API_BASE_URL=https://dummyjson.com docker compose up --build
+```
+
 ### Ejecutar tests
 
 ```bash
