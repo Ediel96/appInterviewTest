@@ -1,0 +1,6 @@
+aws_region     = "us-east-1"
+aws_profile    = "ministore-staging"
+aws_account_id = "111111111111"
+project_name   = "ministore"
+environment    = "staging"
+

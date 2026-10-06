@@ -154,6 +154,60 @@ La URL de DummyJSON se puede cambiar al iniciar el contenedor:
 DUMMYJSON_API_BASE_URL=https://dummyjson.com docker compose up --build
 ```
 
+### Infraestructura AWS
+
+La infraestructura Terraform de staging y producción está junto al backend en
+[`infra/terraform/`](infra/terraform/). La guía incluye el bootstrap del estado
+remoto, publicación inicial en ECR, planificación y validación:
+
+```bash
+cd backend/infra/terraform/environments/staging
+terraform init -backend-config=backend.hcl
+terraform validate
+```
+
+### Despliegue continuo
+
+Actualmente no hay workflows CI/CD versionados: el build y el despliegue se
+ejecutan manualmente con los comandos de esta sección y de la
+[guía Terraform](infra/terraform/README.md). El flujo propuesto para cada push o
+pull request es:
+
+```text
+push/PR → tests Gradle → JaCoCo → Sonar/Quality Gate → imagen Docker
+        → tag inmutable en ECR → Terraform staging → health check
+        → aprobación manual → promoción de la misma imagen a producción
+```
+
+Las pruebas y sus reportes se ejecutan en CI y SonarQube; **no se suben a AWS**.
+AWS recibe únicamente la imagen aprobada y la infraestructura declarada. La
+imagen se construye una sola vez: tras validar staging, se copia el mismo digest
+o tag inmutable al ECR de producción, sin recompilar, y se actualiza `image_tag`
+en el plan de producción.
+
+Comandos esenciales, ejecutados desde `backend/`:
+
+```bash
+./gradlew clean test jacocoTestReport sonar \
+  -Dsonar.token="$SONAR_TOKEN" -Dsonar.qualitygate.wait=true
+
+docker build --platform linux/amd64 -t "$ECR_URL:$IMAGE_TAG" .
+docker push "$ECR_URL:$IMAGE_TAG"
+
+cd infra/terraform/environments/staging
+terraform init -backend-config=backend.hcl
+terraform plan -var-file=terraform.tfvars -out=deployment.tfplan
+terraform apply deployment.tfplan
+curl "$(terraform output -raw application_url)/actuator/health"
+```
+
+Un futuro workflow de GitHub Actions debe vivir en `.github/workflows/` en la
+raíz del repositorio, aunque Terraform esté dentro de `backend/`. El job de
+staging se ejecutaría automáticamente sólo después del Quality Gate; producción
+usaría un environment protegido con aprobación manual. CI debe autenticarse en
+AWS mediante OIDC y roles temporales de mínimo privilegio, nunca con access keys
+permanentes guardadas como secretos.
+
 ### Ejecutar tests
 
 ```bash

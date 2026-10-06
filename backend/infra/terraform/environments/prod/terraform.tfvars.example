@@ -1,0 +1,15 @@
+aws_region     = "us-east-1"
+aws_profile    = "ministore-prod"
+aws_account_id = "222222222222"
+project_name   = "ministore"
+vpc_cidr       = "10.30.0.0/16"
+image_tag      = "2026-10-05.1"
+
+# Reemplazar ambos valores: producción exige HTTPS y un dominio propio.
+certificate_arn    = "arn:aws:acm:us-east-1:222222222222:certificate/replace-me"
+openapi_server_url = "https://api.example.com"
+
+tags = {
+  Owner      = "platform-team"
+  CostCenter = "ministore"
+}

@@ -1,0 +1,7 @@
+bucket       = "ministore-prod-tfstate-222222222222"
+key          = "prod/terraform.tfstate"
+region       = "us-east-1"
+encrypt      = true
+use_lockfile = true
+profile      = "ministore-prod"
+

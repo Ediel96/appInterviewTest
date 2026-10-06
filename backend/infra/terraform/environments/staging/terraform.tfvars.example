@@ -1,0 +1,15 @@
+aws_region     = "us-east-1"
+aws_profile    = "ministore-staging"
+aws_account_id = "111111111111"
+project_name   = "ministore"
+vpc_cidr       = "10.20.0.0/16"
+image_tag      = "2026-10-05.1"
+
+# certificate_arn    = "arn:aws:acm:us-east-1:111111111111:certificate/replace-me"
+# openapi_server_url = "https://api-staging.example.com"
+
+tags = {
+  Owner      = "platform-team"
+  CostCenter = "ministore"
+}
+
