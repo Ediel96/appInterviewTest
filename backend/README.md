@@ -162,6 +162,19 @@ DUMMYJSON_API_BASE_URL=https://dummyjson.com docker compose up --build
 
 Ejecuta todas las pruebas unitarias y de integración.
 
+### Cobertura y SonarQube local
+
+El proyecto genera cobertura JaCoCo y puede analizarse contra SonarQube local:
+
+```bash
+docker compose --profile sonar up -d sonar-db sonarqube
+export SONAR_TOKEN="token-creado-en-http://localhost:9000"
+./gradlew clean test jacocoTestReport sonar -Dsonar.token="$SONAR_TOKEN"
+```
+
+La guía completa, incluyendo arranque, credenciales iniciales, configuración y
+limpieza, está en [SONARQUBE.md](SONARQUBE.md).
+
 ### Compilar y construir
 
 ```bash

@@ -1,8 +1,10 @@
 plugins {
 	id 'java'
+	id 'jacoco'
 	id 'org.springframework.boot' version '3.5.16'
 	id 'io.spring.dependency-management' version '1.1.7'
 	id 'org.springdoc.openapi-gradle-plugin' version '1.9.0'
+	id 'org.sonarqube' version '7.5.0.8588'
 }
 
 group = 'com.example'
@@ -35,6 +37,30 @@ dependencies {
 
 tasks.named('test') {
 	useJUnitPlatform()
+	finalizedBy tasks.named('jacocoTestReport')
+}
+
+jacocoTestReport {
+	dependsOn tasks.named('test')
+	reports {
+		xml.required = true
+		html.required = true
+	}
+}
+
+sonar {
+	properties {
+		property 'sonar.projectKey', 'ministore-backend'
+		property 'sonar.projectName', 'MiniStore Backend'
+		property 'sonar.host.url', System.getenv('SONAR_HOST_URL') ?: 'http://localhost:9000'
+		property 'sonar.coverage.jacoco.xmlReportPaths', layout.buildDirectory.file('reports/jacoco/test/jacocoTestReport.xml').get().asFile
+		property 'sonar.exclusions', '**/build/**'
+		property 'sonar.coverage.exclusions', '**/HamiltonApplication.java,**/configuration/**,**/config/**,**/dto/**'
+	}
+}
+
+tasks.named('sonar') {
+	dependsOn tasks.named('test'), tasks.named('jacocoTestReport')
 }
 
 openApi {
